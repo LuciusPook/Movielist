@@ -6,6 +6,7 @@ const searchForm = document.querySelector('#search-form')
 const searchInput = document.querySelector('#search-input')
 const MOVIES_PER_PAGE = 12
 const paginator = document.querySelector('#paginator')
+const list = JSON.parse(localStorage.getItem('favoriteMovies')) || []
 
 const movies = []
 let filteredMovies = []
@@ -31,6 +32,7 @@ function renderMovieList(data) {
   </div>`
   })
   dataPanel.innerHTML = rawHTML
+  checkFavoriteBtn()
 }
 
 function renderPaginator(amount) {
@@ -44,6 +46,7 @@ function renderPaginator(amount) {
   }
   //放回 HTML
   paginator.innerHTML = rawHTML
+  paginator.firstElementChild.classList.add("active")
 }
 
 
@@ -74,23 +77,32 @@ function showMovieModal(id) {
 }
 
 
-//測試收藏按鈕是否綁定成功
+
 function addToFavorite(id) {
-  // console.log(id)  //第一步測試
-  //第一種
-  //function isMovieIdMatched(movie) {
-  //  return movie.id === id
-  //}
-  const list = JSON.parse(localStorage.getItem('favoriteMovies')) || []
-  //第一種
-  //const movie = movie.find(isMovieTdMatched)
-  //function 轉換為箭頭函式
   const movie = movies.find((movie) => movie.id === id)
+
   if (list.some((movie) => movie.id === id)) {
     return alert('此電影已經在收藏清單中！')
   }
+
   list.push(movie)
+  alert("成功收藏此電影")
   localStorage.setItem('favoriteMovies', JSON.stringify(list))
+}
+
+function checkFavoriteBtn() {
+  const button = document.querySelectorAll(".btn.btn-add-favorite")
+
+  button.forEach((btn) => {
+    if (list.some((movie) => movie.id == btn.dataset.id)) {
+      btn.classList.remove("btn-info")
+      btn.classList.add("btn-danger")
+    } else {
+      btn.classList.add("btn-info")
+      btn.classList.remove("btn-danger")
+    }
+  })
+
 }
 
 paginator.addEventListener('click', function onPaginatorClicked(event) {
@@ -99,8 +111,15 @@ paginator.addEventListener('click', function onPaginatorClicked(event) {
 
   //透過 dataset 取得被點擊的頁數
   const page = Number(event.target.dataset.page)
+
   //更新畫面
   renderMovieList(getMoviesByPage(page))
+
+  // for 迴圈顯示當前頁面是哪一頁
+  for (let li of paginator.children) {
+    li.classList.remove("active")
+    event.target.parentElement.classList.add("active")
+  }
 })
 
 dataPanel.addEventListener('click', function onPanelClicked(event) {
@@ -109,39 +128,23 @@ dataPanel.addEventListener('click', function onPanelClicked(event) {
     //以下判斷式設計收藏按鈕
   } else if (event.target.matches('.btn-add-favorite')) {
     addToFavorite(Number(event.target.dataset.id))
+    checkFavoriteBtn()
   }
 })
 
 searchForm.addEventListener('submit', function onSearchFormSubmitted(event) {
-  //取消預設事件
-  event.preventDefault() 
+  event.preventDefault()
   //取得搜尋關鍵字
   const keyword = searchInput.value.trim().toLowerCase()
-  //儲存符合篩選條件的項目
-  //在函式裡面的話，使用者做搜尋後會被消滅，沒有存取到它，所以要移到上面去讓它保存
-  // let filteredMovies = [] 
 
-  //不是關鍵字的輸出警告 （第一種的判斷式）
-  // if (!keyword.length) {
-  //   return alert('請輸入有效字串！')
-  //   // console.log('click!') //第一階段測試用
-  // }
-
-  //第一種方式 for 迴圈去篩選
-  // for (const movie of movies) {
-  //   if (movie.title.toLowerCase().includes(keyword)) {
-  //     filteredMovies.push(movie)
-  //   }
-  // }
-  
-  //第二種條件篩選
   filteredMovies = movies.filter((movie) =>
     movie.title.toLowerCase().includes(keyword)
   )
-  //配合第二種的判斷式
+
   if (filteredMovies.length === 0 || keyword.length === 0) {
     return alert(`您輸入的關鍵字：${keyword} 沒有符合條件的電影`)
   }
+
   // 因為要在搜尋電影的頁面只留下符合的paginator
   renderPaginator(filteredMovies.length)
   renderMovieList(getMoviesByPage(1))

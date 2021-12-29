@@ -50,7 +50,7 @@ function removeFromFavorite(id) {
   //return console.log(moviesIndex)
 
   if (!movies) return
-  
+
   //透過 id 找到要刪除電影的 index
   const movieIndex = movies.findIndex((movie) => movie.id === id)
   if (movieIndex === -1) return
@@ -71,6 +71,7 @@ dataPanel.addEventListener('click', function onPanelClicked(event) {
     //以下判斷式設計收藏按鈕
   } else if (event.target.matches('.btn-remove-favorite')) {
     removeFromFavorite(Number(event.target.dataset.id))
+    alert("成功移除此電影")
   }
 })
 
